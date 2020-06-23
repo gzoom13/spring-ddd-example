@@ -15,6 +15,8 @@ public class StudyGroup {
     @JoinColumn(name="STUDY_GROUP_ID")
     private List<Student> students;
 
+    private Boolean tooBig;
+
     public Long getId() {
         return id;
     }
@@ -37,5 +39,13 @@ public class StudyGroup {
 
     public void setStudents(List<Student> students) {
         this.students = students;
+    }
+
+    public Boolean getTooBig() {
+        return tooBig;
+    }
+
+    public void setTooBig(Boolean tooBig) {
+        this.tooBig = tooBig;
     }
 }

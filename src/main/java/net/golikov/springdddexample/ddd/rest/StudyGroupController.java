@@ -4,11 +4,15 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.golikov.springdddexample.ddd.model.StudyGroup;
 import net.golikov.springdddexample.ddd.model.database.PersistedStudyGroup;
+import net.golikov.springdddexample.ddd.model.groupsizecheck.StudyGroupWithSizeCheck;
 import net.golikov.springdddexample.ddd.model.indexed.StudyGroupIndexed;
 import net.golikov.springdddexample.ddd.model.indexed.StudyGroupIndexedFactory;
 import net.golikov.springdddexample.ddd.model.json.from.basic.StudyGroupFromJson;
+import net.golikov.springdddexample.ddd.model.json.to.StudentJson;
+import net.golikov.springdddexample.ddd.model.json.to.StudyGroupJson;
 import net.golikov.springdddexample.ddd.model.json.to.basic.BasicStudyGroupArrayJson;
 import net.golikov.springdddexample.ddd.model.json.to.basic.BasicStudyGroupJson;
+import net.golikov.springdddexample.ddd.model.json.to.groupsizecheck.StudyGroupWithSizeCheckJson;
 import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,10 +28,14 @@ public class StudyGroupController {
 
     private final ObjectMapper objectMapper;
     private final StudyGroupIndexedFactory studyGroupIndexedFactory;
+    private final StudyGroupWithSizeCheck.Factory studyGroupWithSizeCheckFactory;
 
-    public StudyGroupController(ObjectMapper objectMapper, StudyGroupIndexedFactory studyGroupIndexedFactory) {
+    public StudyGroupController(ObjectMapper objectMapper,
+                                StudyGroupIndexedFactory studyGroupIndexedFactory,
+                                StudyGroupWithSizeCheck.Factory studyGroupWithSizeCheckFactory) {
         this.objectMapper = objectMapper;
         this.studyGroupIndexedFactory = studyGroupIndexedFactory;
+        this.studyGroupWithSizeCheckFactory = studyGroupWithSizeCheckFactory;
     }
 
     @GetMapping(value = "/study-groups")
@@ -41,7 +49,10 @@ public class StudyGroupController {
     public String saveStudyGroup(@RequestBody JsonNode json) throws Exception {
         StudyGroupFromJson studyGroupFromJson = studyGroupFrom(json);
         PersistedStudyGroup<?> persistedStudyGroup = studyGroupIndexedFactory.persist(studyGroupFromJson);
-        return objectMapper.writeValueAsString(jsonStudyGroup(persistedStudyGroup).toJson());
+        StudyGroupWithSizeCheck<?> studyGroupWithSizeCheck = studyGroupWithSizeCheckFactory.create(persistedStudyGroup);
+        BasicStudyGroupJson result = jsonStudyGroup(persistedStudyGroup);
+
+        return objectMapper.writeValueAsString(result.toJson());
     }
 
     @Lookup
@@ -53,9 +64,16 @@ public class StudyGroupController {
     BasicStudyGroupJson jsonStudyGroup(StudyGroup<?> studyGroup) {
         return null;
     }
+
+    @Lookup
+    <T extends StudentJson<?>> StudyGroupWithSizeCheckJson<T> jsonStudyGroupWithSizeCheck(StudyGroupJson<T> json, StudyGroupWithSizeCheck<?> withSizeCheck) {
+        return null;
+    }
+
     @Lookup
     BasicStudyGroupArrayJson jsonStudyGroupArray(List<? extends StudyGroup<?>> studyGroups) {
         return null;
     }
+
 
 }

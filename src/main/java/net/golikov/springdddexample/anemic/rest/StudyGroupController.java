@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
+import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -21,7 +22,7 @@ public class StudyGroupController {
     }
 
     @GetMapping("/study-groups")
-    public Iterable<StudyGroup> getStudyGroups() {
+    public Stream<StudyGroup> getStudyGroups() {
         return studyGroupService.getAll();
     }
 

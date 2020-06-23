@@ -8,6 +8,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.Optional;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 @Component
 public class StudyGroupService {
@@ -15,21 +17,27 @@ public class StudyGroupService {
     private final StudentService studentService;
     private final StudyGroupRepository studyGroupRepository;
     private final StudyGroupFileSystemManager studyGroupFileSystemManager;
+    private final StudyGroupSizeManager studyGroupSizeManager;
 
     public StudyGroupService(StudentService studentService,
                              StudyGroupRepository studyGroupRepository,
-                             StudyGroupFileSystemManager studyGroupFileSystemManager) {
+                             StudyGroupFileSystemManager studyGroupFileSystemManager,
+                             StudyGroupSizeManager studyGroupSizeManager) {
         this.studentService = studentService;
         this.studyGroupRepository = studyGroupRepository;
         this.studyGroupFileSystemManager = studyGroupFileSystemManager;
+        this.studyGroupSizeManager = studyGroupSizeManager;
     }
 
     public Optional<StudyGroup> get(long studyGroupId) {
-        return studyGroupRepository.findById(studyGroupId);
+        Optional<StudyGroup> result = studyGroupRepository.findById(studyGroupId);
+        result.ifPresent(studyGroupSizeManager::getSize);
+        return result;
     }
 
-    public Iterable<StudyGroup> getAll() {
-        return studyGroupRepository.findAll();
+    public Stream<StudyGroup> getAll() {
+        return StreamSupport.stream(studyGroupRepository.findAll().spliterator(), false)
+                .peek(studyGroupSizeManager::getSize);
     }
 
     @Transactional
@@ -37,6 +45,7 @@ public class StudyGroupService {
         studyGroup.getStudents().forEach(student -> student.setStudyGroup(studyGroup));
         StudyGroup result = studyGroupRepository.save(studyGroup);
         studyGroupFileSystemManager.save(studyGroup);
+        studyGroupSizeManager.saveSize(result);
         for (Student student : studyGroup.getStudents()) {
             studentService.save(studyGroup, student);
         }
